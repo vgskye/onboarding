@@ -40,7 +40,7 @@ async fn submit(
     let password = Alphanumeric.sample_string(&mut thread_rng(), 48);
     board(&client, &username, &password)
         .await
-        .map_err(|_| "An error occurred!")?;
+        .map_err(|e| format!("An error occurred: {e:?}"))?;
     Ok(format!("Your temporary password is: {password}"))
 }
 
