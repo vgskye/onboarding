@@ -80,11 +80,13 @@ async fn board(client: &Client, username: &str, password: &str) -> Result<()> {
             "email": format!("{}@{}", username, var("EMAIL_DOMAIN")?),
             "enabled": true,
             "emailVerified": true,
-            "credentials": {
-                "type": "password",
-                "temporary": true,
-                "value": password
-            }
+            "credentials": [
+                {
+                    "type": "password",
+                    "temporary": true,
+                    "value": password
+                }
+            ]
         }))
         .send()
         .await?
