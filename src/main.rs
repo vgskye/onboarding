@@ -60,7 +60,7 @@ async fn board(client: &Client, username: &str, password: &str) -> Result<()> {
             var("KEYCLOAK_CLIENT_ID")?,
             Some(var("KEYCLOAK_CLIENT_SECRET")?),
         )
-        .json(&json!({
+        .form(&json!({
             "grant_type": "client_credentials"
         }))
         .send()
