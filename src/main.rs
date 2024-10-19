@@ -15,6 +15,7 @@ async fn main() {
     // build our application with a single route
     let app = Router::new()
         .route("/signup", post(submit))
+        .route("/signup-pridecraft", post(submit_pridecraft))
         .with_state(Client::new());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:80").await.unwrap();
@@ -99,6 +100,41 @@ async fn board(client: &Client, username: &str, password: &str) -> Result<()> {
             "domain": var("EMAIL_DOMAIN")?,
             "local_part": username,
             "authsource": "keycloak"
+        }))
+        .send()
+        .await?
+        .error_for_status()?;
+    Ok(())
+}
+
+
+async fn submit_pridecraft(
+    State(client): State<Client>,
+    Form(BoardingRequest {
+        username,
+        invite_code,
+    }): Form<BoardingRequest>,
+) -> Result<String, ErrorResponse> {
+    if invite_code != var("PRIDECRAFT_INVITE_CODE").unwrap() {
+        return Err("Bad invite code!".into());
+    }
+    let password = Alphanumeric.sample_string(&mut thread_rng(), 48);
+    board_pridecraft(&client, &username, &password)
+        .await
+        .map_err(|e| format!("An error occurred: {e:?}"))?;
+    Ok(format!("Your temporary password is: {password}"))
+}
+
+async fn board_pridecraft(client: &Client, username: &str, password: &str) -> Result<()> {
+    client
+        .post(format!("{}/api/v1/add/mailbox", var("MAILCOW_BASE_URL")?,))
+        .header("X-API-Key", var("MAILCOW_TOKEN")?)
+        .json(&json!({
+            "active": 1,
+            "domain": var("PRIDECRAFT_EMAIL_DOMAIN")?,
+            "local_part": username,
+            "password": password,
+            "password2": password,
         }))
         .send()
         .await?
